@@ -100,24 +100,23 @@ def search_phonenumber(phoneNumber, regionCode, installationId):
         'clientsecret': 'lvc22mp3l1sfv6ujg83rd17btt',
         'authorization': 'Bearer ' + installationId}
     try:
-        req = requests.get(
+        r = requests.get(
             'https://search5-noneu.truecaller.com/v2/search', headers=headers, params=params)
-        #print(req.status_code, req.text)
-        if req.status_code == 429:
-            x = {
-                "errorCode": 429,
-                "errorMessage": "too many requests.",
-                "data": None
-            }
-            return x
-        elif req.json().get('status'):
-            x = {
-                "errorMessage": "Your previous login was expired.",
-                "data": None
-            }
-            return x
-        else:
-            return req.json()
+        # print(r.status_code, r.text)
+        try:
+            if r.status_code == requests.codes.ok:
+                # return r.json()
+                return r
+            elif r.status_code == 429:
+                print('\x1b[33mToo many requests. \nPlease try again tomorrow!\x1b[0m')
+                return "too many requests"
+            elif r.status_code == 401:
+                print('\x1b[33mUnauthorized. \nPlease login again.\x1b[0m')
+                return "Unauthorized"      
+        except:
+            print("except called")
+            return None
+
     except requests.exceptions.RequestException as e:
         raise SystemExit(e)
 
@@ -137,67 +136,66 @@ def truecallerpy_search_phonenumber(config):
 
         phoneNumberNational = phonenumbers.format_number(
             number, phonenumbers.PhoneNumberFormat.NATIONAL)
-        jsonInfo = search_phonenumber(getNumber(
+        info = search_phonenumber(getNumber(
             phoneNumberNational), phonenumbers.region_code_for_number(number), installationId)
+        jsonInfo=info.json()
 
         # print(jsonInfo["data"])
-        if jsonInfo["data"] == None and jsonInfo["errorCode"] == 429 and config['json'] == False:
-            raise SystemExit(
-                '\x1b[33mToo many requests. \nPlease try again tomorrow, maybe!\x1b[0m')
-        elif jsonInfo["data"] == None and config["json"] == False and config["raw"] == False and config["email"] == False:
-            raise SystemExit(
-                '\x1b[33mYour previous login was expired. \nPlease login to your account\x1b[0m')
-        elif jsonInfo["data"] == None and config["json"] == True and config["raw"] == False and config["email"] == False:
-            print(json.dumps(jsonInfo, indent=3))
-        elif config["raw"] == True and config["name"] == False and config["email"] == False:
-            print(jsonInfo)
-        elif jsonInfo["data"] != None and config["json"] == False and config["raw"] == True and config["name"] == True and config["email"] == False:
-            try:
-                if "name" in jsonInfo["data"][0]:
-                    name = jsonInfo["data"][0]["name"]
-                else:
-                    name = "Unknown number"
+        if jsonInfo != None or jsonInfo != "Unauthorized" or jsonInfo != "too many requests":
+            if jsonInfo["data"] == None and config["json"] == False and config["raw"] == False and config["email"] == False:
+                raise SystemExit(
+                    '\x1b[33mYour previous login was expired. \nPlease login to your account\x1b[0m')
+            elif jsonInfo["data"] == None and config["json"] == True and config["raw"] == False and config["email"] == False:
+                print(json.dumps(jsonInfo, indent=3))
+            elif config["raw"] == True and config["name"] == False and config["email"] == False:
+                print(jsonInfo)
+            elif jsonInfo["data"] != None and config["json"] == False and config["raw"] == True and config["name"] == True and config["email"] == False:
+                try:
+                    if "name" in jsonInfo["data"][0]:
+                        name = jsonInfo["data"][0]["name"]
+                    else:
+                        name = "Unknown number"
 
-                print(name)
-            except OSError as error:
-                raise SystemExit(error)
+                    print(name)
+                except OSError as error:
+                    raise SystemExit(error)
 
-        elif jsonInfo["data"] != None and config["json"] == False and config["raw"] == False and config["name"] == True and config["email"] == False:
-            try:
-                if "name" in jsonInfo["data"][0]:
-                    name = jsonInfo["data"][0]["name"]
-                else:
-                    name = "Unknown number"
+            elif jsonInfo["data"] != None and config["json"] == False and config["raw"] == False and config["name"] == True and config["email"] == False:
+                try:
+                    if "name" in jsonInfo["data"][0]:
+                        name = jsonInfo["data"][0]["name"]
+                    else:
+                        name = "Unknown number"
 
-                print("\x1b[33mName\x1b[0m : \x1b[32m {} \x1b[0m".format(name))
-            except OSError as error:
-                raise SystemExit(error)
+                    print("\x1b[33mName\x1b[0m : \x1b[32m {} \x1b[0m".format(name))
+                except OSError as error:
+                    raise SystemExit(error)
 
-        elif jsonInfo["data"] != None and config["json"] == False and config["raw"] == True and config["name"] == False and config["email"] == True:
-            try:
-                if len(jsonInfo["data"][0]["internetAddresses"])>0 and "id" in jsonInfo["data"][0]["internetAddresses"][0]:
-                    email = jsonInfo["data"][0]["internetAddresses"][0]["id"]
-                else:
-                    email = "Email not found"
+            elif jsonInfo["data"] != None and config["json"] == False and config["raw"] == True and config["name"] == False and config["email"] == True:
+                try:
+                    if len(jsonInfo["data"][0]["internetAddresses"])>0 and "id" in jsonInfo["data"][0]["internetAddresses"][0]:
+                        email = jsonInfo["data"][0]["internetAddresses"][0]["id"]
+                    else:
+                        email = "Email not found"
 
-                print(email)
-            except OSError as error:
-                raise SystemExit(error)
+                    print(email)
+                except OSError as error:
+                    raise SystemExit(error)
 
-        elif jsonInfo["data"] != None and config["json"] == False and config["raw"] == False and config["name"] == False and config["email"] == True:
-            try:
-                if len(jsonInfo["data"][0]["internetAddresses"])>0 and "id" in jsonInfo["data"][0]["internetAddresses"][0]:
-                    email = jsonInfo["data"][0]["internetAddresses"][0]["id"]
-                else:
-                    email = "Email not found"
+            elif jsonInfo["data"] != None and config["json"] == False and config["raw"] == False and config["name"] == False and config["email"] == True:
+                try:
+                    if len(jsonInfo["data"][0]["internetAddresses"])>0 and "id" in jsonInfo["data"][0]["internetAddresses"][0]:
+                        email = jsonInfo["data"][0]["internetAddresses"][0]["id"]
+                    else:
+                        email = "Email not found"
 
-                print("\x1b[33memail\x1b[0m : \x1b[32m {} \x1b[0m".format(email))
-            except OSError as error:
-                raise SystemExit(error)
+                    print("\x1b[33memail\x1b[0m : \x1b[32m {} \x1b[0m".format(email))
+                except OSError as error:
+                    raise SystemExit(error)
 
 
-        else:       
-            print(json.dumps(jsonInfo, indent=3))
+            else:       
+                print(json.dumps(jsonInfo, indent=3))
 
 
         
