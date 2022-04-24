@@ -105,13 +105,14 @@ def search_phonenumber(phoneNumber, regionCode, installationId):
         # print(r.status_code, r.text)
         try:
             if r.status_code == requests.codes.ok:
-                return r.json()
+                # return r.json()
+                return r
             elif r.status_code == 429:
                 print('\x1b[33mToo many requests. \nPlease try again tomorrow!\x1b[0m')
-                return None
+                return "too many requests"
             elif r.status_code == 401:
                 print('\x1b[33mUnauthorized. \nPlease login again.\x1b[0m')
-                return None      
+                return "Unauthorized"      
         except:
             print("except called")
             return None
@@ -135,11 +136,12 @@ def truecallerpy_search_phonenumber(config):
 
         phoneNumberNational = phonenumbers.format_number(
             number, phonenumbers.PhoneNumberFormat.NATIONAL)
-        jsonInfo = search_phonenumber(getNumber(
+        info = search_phonenumber(getNumber(
             phoneNumberNational), phonenumbers.region_code_for_number(number), installationId)
+        jsonInfo=info.json()
 
         # print(jsonInfo["data"])
-        if jsonInfo != None:
+        if jsonInfo != None or jsonInfo != "Unauthorized" or jsonInfo != "too many requests":
             if jsonInfo["data"] == None and config["json"] == False and config["raw"] == False and config["email"] == False:
                 raise SystemExit(
                     '\x1b[33mYour previous login was expired. \nPlease login to your account\x1b[0m')
