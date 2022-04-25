@@ -138,10 +138,11 @@ def truecallerpy_search_phonenumber(config):
             number, phonenumbers.PhoneNumberFormat.NATIONAL)
         info = search_phonenumber(getNumber(
             phoneNumberNational), phonenumbers.region_code_for_number(number), installationId)
-        jsonInfo=info.json()
+        
 
-        # print(jsonInfo["data"])
-        if jsonInfo != None or jsonInfo != "Unauthorized" or jsonInfo != "too many requests":
+        print(info)
+        if info != "Unauthorized" or info != "too many requests":
+            jsonInfo=info.json()
             if jsonInfo["data"] == None and config["json"] == False and config["raw"] == False and config["email"] == False:
                 raise SystemExit(
                     '\x1b[33mYour previous login was expired. \nPlease login to your account\x1b[0m')
